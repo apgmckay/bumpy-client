@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"time"
 )
 
 const (
@@ -19,103 +17,70 @@ type Client struct {
 	httpClient http.Client
 }
 
-var responses map[string]interface{}
+// ---------- public POST API -------------------------------------------------
 
-func New(endpoint, timeDurationString string) (Client, error) {
-	parsedEndpoint, err := url.ParseRequestURI(endpoint)
-	if err != nil {
-		return Client{}, err
-	}
-
-	timeout, err := time.ParseDuration(timeDurationString)
-	if err != nil {
-		return Client{}, err
-	}
-
-	return Client{
-		URL: parsedEndpoint.String(),
-		httpClient: http.Client{
-			Timeout: timeout,
-		},
-	}, nil
+func (c Client) PostMajor(params map[string]string, body io.Reader) (string, error) {
+	return c.do("POST", "major", params, body)
 }
 
+func (c Client) PostMinor(params map[string]string, body io.Reader) (string, error) {
+	return c.do("POST", "minor", params, body)
+}
+
+func (c Client) PostPatch(params map[string]string, body io.Reader) (string, error) {
+	return c.do("POST", "patch", params, body)
+}
+
+// ---------- existing GET methods (kept for compatibility) -------------------
+
 func (c Client) GetMajor(params map[string]string) (string, error) {
-	endpoint := fmt.Sprintf("%s/api/v%d/major/%s", c.URL, v1, params["version"])
-	endpoint = c.genURLQueryParams(endpoint, params)
-
-	resp, err := c.httpClient.Get(endpoint)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error")
-	}
-
-	json.Unmarshal(body, &responses)
-
-	return responses["version"].(string), nil
+	return c.do("GET", "major", params, nil)
 }
 
 func (c Client) GetMinor(params map[string]string) (string, error) {
-	endpoint := fmt.Sprintf("%s/api/v%d/minor/%s", c.URL, v1, params["version"])
-	endpoint = c.genURLQueryParams(endpoint, params)
-
-	resp, err := c.httpClient.Get(endpoint)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error")
-	}
-
-	json.Unmarshal(body, &responses)
-
-	return responses["version"].(string), nil
+	return c.do("GET", "minor", params, nil)
 }
 
 func (c Client) GetPatch(params map[string]string) (string, error) {
-	endpoint := fmt.Sprintf("%s/api/v%d/patch/%s", c.URL, v1, params["version"])
+	return c.do("GET", "patch", params, nil)
+}
 
+// ---------- generic helper --------------------------------------------------
+
+func (c Client) do(method, segment string, params map[string]string, body io.Reader) (string, error) {
+	ver := params["version"]
+	endpoint := fmt.Sprintf("%s/api/v%d/%s/%s", c.URL, v1, segment, ver)
 	endpoint = c.genURLQueryParams(endpoint, params)
 
-	resp, err := c.httpClient.Get(endpoint)
+	req, err := http.NewRequest(method, endpoint, body)
+	if err != nil {
+		return "", err
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
+	}
+
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", err
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error")
-	}
-
-	json.Unmarshal(body, &responses)
-
-	return responses["version"].(string), nil
+	return result["version"].(string), nil
 }
+
+// ---------- url-builder (unchanged) -----------------------------------------
 
 func (c Client) genURLQueryParams(endpoint string, queryParams map[string]string) string {
 	firstParam := true
-
 	delete(queryParams, "version")
 
 	for k, v := range queryParams {
@@ -128,6 +93,5 @@ func (c Client) genURLQueryParams(endpoint string, queryParams map[string]string
 			}
 		}
 	}
-
 	return endpoint
 }
