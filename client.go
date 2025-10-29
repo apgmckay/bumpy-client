@@ -40,7 +40,7 @@ func New(endpoint, timeDurationString string) (Client, error) {
 	}, nil
 }
 
-func (c Client) BumpMajor(params map[string]string) (string, error) {
+func (c Client) GetMajor(params map[string]string) (string, error) {
 	endpoint := fmt.Sprintf("%s/api/v%d/major/%s", c.URL, v1, params["version"])
 	endpoint = c.genURLQueryParams(endpoint, params)
 
@@ -64,7 +64,7 @@ func (c Client) BumpMajor(params map[string]string) (string, error) {
 	return responses["version"].(string), nil
 }
 
-func (c Client) BumpMinor(params map[string]string) (string, error) {
+func (c Client) GetMinor(params map[string]string) (string, error) {
 	endpoint := fmt.Sprintf("%s/api/v%d/minor/%s", c.URL, v1, params["version"])
 	endpoint = c.genURLQueryParams(endpoint, params)
 
@@ -88,7 +88,7 @@ func (c Client) BumpMinor(params map[string]string) (string, error) {
 	return responses["version"].(string), nil
 }
 
-func (c Client) BumpPatch(params map[string]string) (string, error) {
+func (c Client) GetPatch(params map[string]string) (string, error) {
 	endpoint := fmt.Sprintf("%s/api/v%d/patch/%s", c.URL, v1, params["version"])
 
 	endpoint = c.genURLQueryParams(endpoint, params)
