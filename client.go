@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"time"
 )
 
 const (
@@ -15,6 +17,25 @@ const (
 type Client struct {
 	URL        string
 	httpClient http.Client
+}
+
+func New(endpoint, timeDurationString string) (Client, error) {
+	parsedEndpoint, err := url.ParseRequestURI(endpoint)
+	if err != nil {
+		return Client{}, err
+	}
+
+	timeout, err := time.ParseDuration(timeDurationString)
+	if err != nil {
+		return Client{}, err
+	}
+
+	return Client{
+		URL: parsedEndpoint.String(),
+		httpClient: http.Client{
+			Timeout: timeout,
+		},
+	}, nil
 }
 
 // ---------- public POST API -------------------------------------------------
