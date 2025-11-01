@@ -98,6 +98,7 @@ func (c Client) GetBlocked() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	fmt.Println(result)
 	b, err := strconv.ParseBool(result["status"].(string))
 	if err != nil {
 		return false, err
