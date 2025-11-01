@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -92,12 +91,7 @@ func (c Client) GetBlocked() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Println(result)
-	b, err := strconv.ParseBool(result["status"].(string))
-	if err != nil {
-		return false, err
-	}
-	return b, err
+	return result["status"].(bool), err
 }
 
 func (c Client) do(method, segment string, params map[string]string, body io.Reader) (map[string]any, error) {
