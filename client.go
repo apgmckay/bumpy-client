@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -38,28 +39,40 @@ func New(endpoint, timeDurationString string) (Client, error) {
 	}, nil
 }
 
-func (c Client) PostMajor(params map[string]string, body io.Reader) (string, error) {
+func (c Client) PostBumpMajor(params map[string]string, body io.Reader) (string, error) {
 	return c.do("POST", "bump/major", params, body)
 }
 
-func (c Client) PostMinor(params map[string]string, body io.Reader) (string, error) {
+func (c Client) PostBumpMinor(params map[string]string, body io.Reader) (string, error) {
 	return c.do("POST", "bump/minor", params, body)
 }
 
-func (c Client) PostPatch(params map[string]string, body io.Reader) (string, error) {
+func (c Client) PostBumpPatch(params map[string]string, body io.Reader) (string, error) {
 	return c.do("POST", "bump/patch", params, body)
 }
 
-func (c Client) GetMajor(params map[string]string) (string, error) {
+func (c Client) GetBumpMajor(params map[string]string) (string, error) {
 	return c.do("GET", "bump/major", params, nil)
 }
 
-func (c Client) GetMinor(params map[string]string) (string, error) {
+func (c Client) GetBumpMinor(params map[string]string) (string, error) {
 	return c.do("GET", "bump/minor", params, nil)
 }
 
-func (c Client) GetPatch(params map[string]string) (string, error) {
+func (c Client) GetBumpPatch(params map[string]string) (string, error) {
 	return c.do("GET", "bump/patch", params, nil)
+}
+
+func (c Client) GetBlocked() (bool, error) {
+	result, err := c.do("GET", "blocked", nil, nil)
+	if err != nil {
+		return false, err
+	}
+	b, err := strconv.ParseBool(result)
+	if err != nil {
+		return false, err
+	}
+	return b, err
 }
 
 func (c Client) do(method, segment string, params map[string]string, body io.Reader) (string, error) {
