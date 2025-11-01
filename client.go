@@ -40,27 +40,57 @@ func New(endpoint, timeDurationString string) (Client, error) {
 }
 
 func (c Client) PostBumpMajor(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", fmt.Sprintf("bump/major/%s", params["version"]), params, body)
+	result, err := c.do("POST", fmt.Sprintf("bump/major/%s", params["version"]), params, body)
+	if err != nil {
+		return "", err
+	}
+	return result["version"].(string), err
 }
 
 func (c Client) PostBumpMinor(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", fmt.Sprintf("bump/minor/%s", params["version"]), params, body)
+	result, err := c.do("POST", fmt.Sprintf("bump/minor/%s", params["version"]), params, body)
+	if err != nil {
+		return "", err
+	}
+	return result["version"].(string), err
 }
 
 func (c Client) PostBumpPatch(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", fmt.Sprintf("bump/patch/%s", params["version"]), params, body)
+	result, err := c.do("POST", fmt.Sprintf("bump/patch/%s", params["version"]), params, body)
+	if err != nil {
+		return "", err
+	}
+	return result["version"].(string), err
 }
 
+/*
+	c.JSON(http.StatusOK, map[string]any{
+		"blocked": map[string]any{
+			"status": false,
+		},
+*/
 func (c Client) GetBumpMajor(params map[string]string) (string, error) {
-	return c.do("GET", fmt.Sprintf("bump/major/%s", params["version"]), params, nil)
+	result, err := c.do("GET", fmt.Sprintf("bump/major/%s", params["version"]), params, nil)
+	if err != nil {
+		return "", err
+	}
+	return result["version"].(string), err
 }
 
 func (c Client) GetBumpMinor(params map[string]string) (string, error) {
-	return c.do("GET", fmt.Sprintf("bumpy/minor/%s", params["version"]), params, nil)
+	result, err := c.do("GET", fmt.Sprintf("bump/minor/%s", params["version"]), params, nil)
+	if err != nil {
+		return "", err
+	}
+	return result["version"].(string), err
 }
 
 func (c Client) GetBumpPatch(params map[string]string) (string, error) {
-	return c.do("GET", fmt.Sprintf("bump/patch/%s", params["version"]), params, nil)
+	result, err := c.do("GET", fmt.Sprintf("bump/patch/%s", params["version"]), params, nil)
+	if err != nil {
+		return "", err
+	}
+	return result["version"].(string), err
 }
 
 func (c Client) GetBlocked() (bool, error) {
@@ -68,20 +98,20 @@ func (c Client) GetBlocked() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	b, err := strconv.ParseBool(result)
+	b, err := strconv.ParseBool(result["status"].(string))
 	if err != nil {
 		return false, err
 	}
 	return b, err
 }
 
-func (c Client) do(method, segment string, params map[string]string, body io.Reader) (string, error) {
+func (c Client) do(method, segment string, params map[string]string, body io.Reader) (map[string]any, error) {
 	endpoint := fmt.Sprintf("%s/api/v%d/%s", c.URL, v1, segment)
 	endpoint = c.genURLQueryParams(endpoint, params)
 
 	req, err := http.NewRequest(method, endpoint, body)
 	if err != nil {
-		return "", err
+		return map[string]any{}, err
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -89,19 +119,20 @@ func (c Client) do(method, segment string, params map[string]string, body io.Rea
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", err
+		return map[string]any{}, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return map[string]any{}, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
 	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return map[string]any{}, err
 	}
-	return result["version"].(string), nil
+	// TODO: fix this
+	return result, nil
 }
 
 func (c Client) genURLQueryParams(endpoint string, queryParams map[string]string) string {
