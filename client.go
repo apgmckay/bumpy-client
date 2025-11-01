@@ -40,27 +40,27 @@ func New(endpoint, timeDurationString string) (Client, error) {
 }
 
 func (c Client) PostBumpMajor(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", "bump/major", params, body)
+	return c.do("POST", fmt.Sprintf("bump/major/%s", params["version"]), params, body)
 }
 
 func (c Client) PostBumpMinor(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", "bump/minor", params, body)
+	return c.do("POST", fmt.Sprintf("bump/minor/%s", params["version"]), params, body)
 }
 
 func (c Client) PostBumpPatch(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", "bump/patch", params, body)
+	return c.do("POST", fmt.Sprintf("bump/patch/%s", params["version"]), params, body)
 }
 
 func (c Client) GetBumpMajor(params map[string]string) (string, error) {
-	return c.do("GET", "bump/major", params, nil)
+	return c.do("GET", fmt.Sprintf("bump/major/%s", params["version"]), params, nil)
 }
 
 func (c Client) GetBumpMinor(params map[string]string) (string, error) {
-	return c.do("GET", "bump/minor", params, nil)
+	return c.do("GET", fmt.Sprintf("bumpy/minor/%s", params["version"]), params, nil)
 }
 
 func (c Client) GetBumpPatch(params map[string]string) (string, error) {
-	return c.do("GET", "bump/patch", params, nil)
+	return c.do("GET", fmt.Sprintf("bump/patch/%s", params["version"]), params, nil)
 }
 
 func (c Client) GetBlocked() (bool, error) {
@@ -76,8 +76,7 @@ func (c Client) GetBlocked() (bool, error) {
 }
 
 func (c Client) do(method, segment string, params map[string]string, body io.Reader) (string, error) {
-	ver := params["version"]
-	endpoint := fmt.Sprintf("%s/api/v%d/%s/%s", c.URL, v1, segment, ver)
+	endpoint := fmt.Sprintf("%s/api/v%d/%s", c.URL, v1, segment)
 	endpoint = c.genURLQueryParams(endpoint, params)
 
 	req, err := http.NewRequest(method, endpoint, body)
