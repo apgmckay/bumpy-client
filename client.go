@@ -38,35 +38,29 @@ func New(endpoint, timeDurationString string) (Client, error) {
 	}, nil
 }
 
-// ---------- public POST API -------------------------------------------------
-
 func (c Client) PostMajor(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", "major", params, body)
+	return c.do("POST", "bump/major", params, body)
 }
 
 func (c Client) PostMinor(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", "minor", params, body)
+	return c.do("POST", "bump/minor", params, body)
 }
 
 func (c Client) PostPatch(params map[string]string, body io.Reader) (string, error) {
-	return c.do("POST", "patch", params, body)
+	return c.do("POST", "bump/patch", params, body)
 }
 
-// ---------- existing GET methods (kept for compatibility) -------------------
-
 func (c Client) GetMajor(params map[string]string) (string, error) {
-	return c.do("GET", "major", params, nil)
+	return c.do("GET", "bump/major", params, nil)
 }
 
 func (c Client) GetMinor(params map[string]string) (string, error) {
-	return c.do("GET", "minor", params, nil)
+	return c.do("GET", "bump/minor", params, nil)
 }
 
 func (c Client) GetPatch(params map[string]string) (string, error) {
-	return c.do("GET", "patch", params, nil)
+	return c.do("GET", "bump/patch", params, nil)
 }
-
-// ---------- generic helper --------------------------------------------------
 
 func (c Client) do(method, segment string, params map[string]string, body io.Reader) (string, error) {
 	ver := params["version"]
@@ -97,8 +91,6 @@ func (c Client) do(method, segment string, params map[string]string, body io.Rea
 	}
 	return result["version"].(string), nil
 }
-
-// ---------- url-builder (unchanged) -----------------------------------------
 
 func (c Client) genURLQueryParams(endpoint string, queryParams map[string]string) string {
 	firstParam := true
