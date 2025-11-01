@@ -63,12 +63,6 @@ func (c Client) PostBumpPatch(params map[string]string, body io.Reader) (string,
 	return result["version"].(string), err
 }
 
-/*
-	c.JSON(http.StatusOK, map[string]any{
-		"blocked": map[string]any{
-			"status": false,
-		},
-*/
 func (c Client) GetBumpMajor(params map[string]string) (string, error) {
 	result, err := c.do("GET", fmt.Sprintf("bump/major/%s", params["version"]), params, nil)
 	if err != nil {
