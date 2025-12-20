@@ -117,10 +117,11 @@ func (c Client) do(method, segment string, params map[string]string, body io.Rea
 	}
 
 	var result map[string]any
+
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return map[string]any{}, err
 	}
-	// TODO: fix this
+
 	return result, nil
 }
 
